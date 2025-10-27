@@ -1,0 +1,25 @@
+# Node
+node_modules/
+
+# TypeScript build output
+dist/
+
+# Static build output from frontend
+public/
+
+# Environment
+.env
+.env.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+thumbs.db
+
+# Editor
+.vscode/
+.idea/

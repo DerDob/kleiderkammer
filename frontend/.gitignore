@@ -1,0 +1,24 @@
+# Node
+node_modules/
+
+# Vite / build output
+dist/
+.vite/
+
+# Build output configured to go into backend/public (ignore just in case)
+../backend/public/
+
+# Environment
+.env
+.env.local
+
+# Logs
+npm-debug.log*
+
+# OS files
+.DS_Store
+thumbs.db
+
+# Editor
+.vscode/
+.idea/
