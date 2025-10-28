@@ -1,0 +1,26 @@
+# SAML Configuration for Authentik
+saml:
+  # Service Provider (SP) settings
+  sp:
+    entityId: "http://localhost:3000/saml/metadata"
+    assertionConsumerService: "http://localhost:3000/saml/callback"
+    privateKey: "/path/to/sp-private-key.pem"  # Generate with: openssl genrsa -out sp-private-key.pem 2048
+    certificate: "/path/to/sp-certificate.pem"  # Generate with: openssl req -new -x509 -key sp-private-key.pem -out sp-certificate.pem -days 365
+
+  # Identity Provider (Authentik) settings
+  idp:
+    entityId: "https://auth.example.com/application/saml/kleiderkammer/"
+    ssoUrl: "https://auth.example.com/application/saml/kleiderkammer/sso/binding/redirect/"
+    certificate: "/path/to/authentik-certificate.pem"  # Download from Authentik
+
+# Session settings
+session:
+  secret: "your-secure-session-secret"  # Change this in production!
+  cookie:
+    secure: true
+    sameSite: "lax"
+
+# Other settings
+server:
+  baseUrl: "http://localhost:3000"
+  behindProxy: false  # Set to true if behind reverse proxy
