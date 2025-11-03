@@ -1,7 +1,7 @@
 import { Strategy as SamlStrategy } from 'passport-saml';
 import passport from 'passport';
 import session from 'express-session';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { parse as parseYaml } from 'yaml';
 import { join } from 'path';
 import { Application, CookieOptions, NextFunction, Request, Response } from 'express';
@@ -57,14 +57,44 @@ export function configureSaml(app: Application) {
   app.use(passport.session());
 
   // Configure SAML strategy
+  function safeRead(p: string) {
+    try {
+      if (!p || !existsSync(p)) return undefined;
+      return readFileSync(p, 'utf8');
+    } catch (err) {
+      return undefined;
+    }
+  }
+
+  const spKey = safeRead(config.saml.sp.privateKey);
+  const idpCert = safeRead(config.saml.idp.certificate);
+
+  if (!spKey || !idpCert) {
+    console.warn('SAML configuration incomplete or certificates missing - SAML disabled. Set correct paths in backend/config/saml-config.yaml or set environment variables.');
+    // Provide a noop implementation so the rest of the app can run in dev without SAML
+    return {
+      ensureAuthenticated: (_req: Request, _res: Response, next: NextFunction) => next(),
+      routes: {
+        login: '/auth/login',
+        loginHandler: (_req: Request, res: Response) => res.status(501).send('SAML not configured'),
+        callback: '/saml/callback',
+        callbackHandler: (_req: Request, res: Response) => res.status(501).send('SAML not configured'),
+        metadata: '/saml/metadata',
+        metadataHandler: (_req: Request, res: Response) => res.status(501).send('SAML not configured'),
+        logout: '/auth/logout',
+        logoutHandler: (_req: Request, res: Response) => res.status(501).send('SAML not configured')
+      }
+    };
+  }
+
   const samlStrategy = new SamlStrategy(
     {
       callbackUrl: config.saml.sp.assertionConsumerService,
       entryPoint: config.saml.idp.ssoUrl,
       issuer: config.saml.sp.entityId,
-      cert: readFileSync(config.saml.idp.certificate, 'utf8'),
-      privateKey: readFileSync(config.saml.sp.privateKey, 'utf8'),
-      decryptionPvk: readFileSync(config.saml.sp.privateKey, 'utf8'),
+      cert: idpCert as any,
+      privateKey: spKey as any,
+      decryptionPvk: spKey as any,
       signatureAlgorithm: 'sha256'
     },
     (profile: any, done: any) => {
@@ -121,10 +151,8 @@ export function configureSaml(app: Application) {
       // SAML metadata
       metadata: '/saml/metadata',
       metadataHandler: (req: Request, res: Response) => {
-        const metadata = samlStrategy.generateServiceProviderMetadata(
-          readFileSync(config.saml.sp.certificate, 'utf8'),
-          readFileSync(config.saml.sp.certificate, 'utf8')
-        );
+        const cert = safeRead(config.saml.sp.certificate);
+        const metadata = samlStrategy.generateServiceProviderMetadata(cert as any, cert as any);
         res.type('application/xml');
         res.send(metadata);
       },

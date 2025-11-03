@@ -145,3 +145,24 @@ Replace:
   curl http://localhost:3000/api/health
   # Expected: {"status":"ok"}
   ```
+
+### Environment variables (optional)
+
+You can configure filenames and Authentik API access using environment variables:
+
+- `CLOTHING_FILE` - path to persist clothing JSON (default: `backend/data/clothing.json`)
+- `LENDINGS_FILE` - path to persist lendings JSON (default: `backend/data/lendings.json`)
+- `AUTHENTIK_USER_API` - URL to Authentik users API to refresh users (optional)
+- `AUTHENTIK_API_TOKEN` - Bearer token for the Authentik API (optional)
+- `ADMIN_GROUP` - Name of the admin group that can manage all resources (default: `kleiderkammer-admin`)
+
+Example (bash):
+
+```bash
+export CLOTHING_FILE=/var/lib/kleiderkammer/clothing.json
+export LENDINGS_FILE=/var/lib/kleiderkammer/lendings.json
+export AUTHENTIK_USER_API=https://auth.example.com/api/users/
+export AUTHENTIK_API_TOKEN=your-token-here
+npm run dev
+```
+
